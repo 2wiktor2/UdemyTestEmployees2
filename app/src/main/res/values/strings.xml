@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">UdemyTestEmployees2</string>
+    <string name="name">Имя:</string>
+    <string name="last_name">Фамилия:</string>
 </resources>
