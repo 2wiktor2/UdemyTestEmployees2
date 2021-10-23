@@ -9,38 +9,32 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.wiktor.udemytestemployees2.R;
 import com.wiktor.udemytestemployees2.adapteers.EmployeeAdapter;
-import com.wiktor.udemytestemployees2.api.ApiFactory;
-import com.wiktor.udemytestemployees2.api.ApiService;
 import com.wiktor.udemytestemployees2.pojo.Employee;
-import com.wiktor.udemytestemployees2.pojo.EmployeeResponse;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Consumer;
-import io.reactivex.schedulers.Schedulers;
-
-public class EmployeeListActivity extends AppCompatActivity {
+public class EmployeeListActivity extends AppCompatActivity implements EmployeeListView {
 
     List<Employee> employeeList;
     private RecyclerView recyclerViewEmployees;
     private EmployeeAdapter adapter;
     //http://gitlab.65apps.com/65gb/static/raw/master/testTask.json
 
-    private Disposable disposable;
-    private CompositeDisposable compositeDisposable;
+    //Ссылка на презентер
+    private EmployeeListPresenter presenter;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_employee_list);
 
+        presenter = new EmployeeListPresenter(this);
+
+
         adapter = new EmployeeAdapter();
         adapter.setEmployees(new ArrayList<>());
-
 /*        Employee employee1 = new Employee();
         employee1.setName("Виктор");
         employee1.setlName("Иванов");
@@ -51,56 +45,39 @@ public class EmployeeListActivity extends AppCompatActivity {
         employeeList.add(employee2);
         adapter.setEmployees(employeeList);*/
         employeeList = new ArrayList<>();
-
         recyclerViewEmployees = findViewById(R.id.recyclerView_employees);
         recyclerViewEmployees.setLayoutManager(new LinearLayoutManager(this));
         recyclerViewEmployees.setAdapter(adapter);
 
 
-        // получаем ApiFactory
-        ApiFactory apiFactory = ApiFactory.getInstance();
+        presenter.loadData();
+    }
 
-        // получаем ApiService
-        ApiService apiService = apiFactory.getApiService();
+/*    // Чтобы отобразить данные активность должна содержать метод showData(). Принимает лист сотрудников
+    public void showData(List<Employee> employees) {
+        adapter.setEmployees(employees);
+    }
 
-        //Получаем данные
-        //Добавляем методы:
-        // получаем данные
-        // .subscribeOn() --- чтобы показать в каком протоке все делать. Все обращения к бд и запросы к сети делаются в Schedulers.io()
-        // принимем данные
-        // .observeOn(AndroidSchedulers.mainThread()) --- указать в каком потоке будем принимать данные. Принимать данные будем уже в глакном потоке
-        // Что делать после получения данных
-        // .subscribe(new Consumer, new Consumer )
+    // Показать тост при ошибке со связью
+    public void showError(Throwable throwable) {
+        Toast.makeText(EmployeeListActivity.this, "ошибка полученя данных " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
+    }*/
 
-        // Если пользователь выходит из приложения, я процесс еше работает в фоновом режиме, то происходит утечка памяти.
-        // Для этого нужно привести к типу Disposable(перевод: выбрасываемый или одноразовый)( Disposable disposable = apiService.getEmployees()). После закрытия приложения у объекта Disposable вызвать метод  disposable.dispose();
-                        /*if (disposable != null) {
-                            disposable.dispose();
-                        }*/
-        // Если объектов Disposable много, то все они складываются в объект CompositeDisposable и закрываются все сразу.
-        compositeDisposable = new CompositeDisposable();
-        disposable = apiService.getEmployees()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Consumer<EmployeeResponse>() {
-                    @Override
-                    public void accept(EmployeeResponse employeeResponse) throws Exception {
-                        adapter.setEmployees(employeeResponse.getEmployees());
-                    }
-                }, new Consumer<Throwable>() {
-                    @Override
-                    public void accept(Throwable throwable) throws Exception {
-                        Toast.makeText(EmployeeListActivity.this, "ошибка полученя данных " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                });
-        compositeDisposable.add(disposable);
+
+    @Override
+    public void showData(List<Employee> employees) {
+        adapter.setEmployees(employees);
+    }
+
+    @Override
+    public void showError(Throwable throwable) {
+        Toast.makeText(EmployeeListActivity.this, "ошибка полученя данных " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
     }
 
     @Override
     protected void onDestroy() {
-        if (compositeDisposable != null) {
-            compositeDisposable.dispose();
-        }
         super.onDestroy();
+        presenter.disposeDisposable();
     }
+
 }
