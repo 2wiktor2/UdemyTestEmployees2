@@ -1,4 +1,4 @@
-package com.wiktor.udemytestemployees2;
+package com.wiktor.udemytestemployees2.screens.employees;
 
 import android.os.Bundle;
 import android.widget.Toast;
@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.wiktor.udemytestemployees2.R;
 import com.wiktor.udemytestemployees2.adapteers.EmployeeAdapter;
 import com.wiktor.udemytestemployees2.api.ApiFactory;
 import com.wiktor.udemytestemployees2.api.ApiService;
@@ -22,7 +23,7 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 
-public class MainActivity extends AppCompatActivity {
+public class EmployeeListActivity extends AppCompatActivity {
 
     List<Employee> employeeList;
     private RecyclerView recyclerViewEmployees;
@@ -35,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_employee_list);
 
         adapter = new EmployeeAdapter();
         adapter.setEmployees(new ArrayList<>());
@@ -89,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
                 }, new Consumer<Throwable>() {
                     @Override
                     public void accept(Throwable throwable) throws Exception {
-                        Toast.makeText(MainActivity.this, "ошибка полученя данных " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(EmployeeListActivity.this, "ошибка полученя данных " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
         compositeDisposable.add(disposable);
