@@ -4,6 +4,8 @@ import android.os.Bundle;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -14,24 +16,20 @@ import com.wiktor.udemytestemployees2.pojo.Employee;
 import java.util.ArrayList;
 import java.util.List;
 
-public class EmployeeListActivity extends AppCompatActivity implements EmployeeListView {
+public class EmployeeListActivity extends AppCompatActivity {
 
     List<Employee> employeeList;
     private RecyclerView recyclerViewEmployees;
     private EmployeeAdapter adapter;
     //http://gitlab.65apps.com/65gb/static/raw/master/testTask.json
 
-    //Ссылка на презентер
-    private EmployeeListPresenter presenter;
+    private EmployeeViewModel viewModel;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_employee_list);
-
-        presenter = new EmployeeListPresenter(this);
-
 
         adapter = new EmployeeAdapter();
         adapter.setEmployees(new ArrayList<>());
@@ -49,35 +47,28 @@ public class EmployeeListActivity extends AppCompatActivity implements EmployeeL
         recyclerViewEmployees.setLayoutManager(new LinearLayoutManager(this));
         recyclerViewEmployees.setAdapter(adapter);
 
+        viewModel = new ViewModelProvider(this).get(EmployeeViewModel.class);
+        //Подписаться на изменения в базе данных
+        viewModel.getEmployees().observe(this, new Observer<List<Employee>>() {
+            @Override
+            public void onChanged(List<Employee> employees) {
+                adapter.setEmployees(employees);
+            }
+        });
 
-        presenter.loadData();
-    }
+        //подписаться на ошибки
+        viewModel.getErrors().observe(this, new Observer<Throwable>() {
+            @Override
+            public void onChanged(Throwable throwable) {
+                if (throwable != null) {
+                    Toast.makeText(EmployeeListActivity.this, "Ошибка полученя данных", Toast.LENGTH_SHORT).show();
+                    //отчистка ошибки
+                    viewModel.clearErrors();
+                }
+            }
+        });
+        viewModel.loadData();
 
-/*    // Чтобы отобразить данные активность должна содержать метод showData(). Принимает лист сотрудников
-    public void showData(List<Employee> employees) {
-        adapter.setEmployees(employees);
-    }
-
-    // Показать тост при ошибке со связью
-    public void showError(Throwable throwable) {
-        Toast.makeText(EmployeeListActivity.this, "ошибка полученя данных " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
-    }*/
-
-
-    @Override
-    public void showData(List<Employee> employees) {
-        adapter.setEmployees(employees);
-    }
-
-    @Override
-    public void showError(Throwable throwable) {
-        Toast.makeText(EmployeeListActivity.this, "ошибка полученя данных " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        presenter.disposeDisposable();
     }
 
 }
